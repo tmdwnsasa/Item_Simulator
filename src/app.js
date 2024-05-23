@@ -3,9 +3,10 @@ import errorHandlingMiddleware from "./middlewares/error-handling.middleware.js"
 import UsersRouter from "./routes/users.router.js";
 import ItemsRouter from "./routes/items.router.js";
 
+const app = express();
 const PORT = 3000;
 
-const app = express();
+app.use(express.json());
 
 app.use("/api", [UsersRouter, ItemsRouter]);
 
