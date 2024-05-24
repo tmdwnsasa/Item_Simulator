@@ -29,11 +29,11 @@ model Character {
   id        Int     @id @default(autoincrement()) @map("id")
   name      String  @unique @map("name")
   User_id   Int     @map("user_id")
-  health    Int     @map("health")
-  power     Int     @map("power")
-  money     Int     @map("money")
+  health    Int     @default(500) @map("health")
+  power     Int     @default(100) @map("power")
+  money     Int     @default(10000) @map("money")
 
   user      User    @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
 
-  @@map("character")
+  @@map("character_db")
 }

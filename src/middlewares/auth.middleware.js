@@ -4,24 +4,28 @@ import { userPrisma } from "../utils/prisma/index.js";
 export default async function (req, res, next) {
   try {
     const authorization = req.header("Authorization");
-    if (!authorization) throw new Error("토큰이 존재하지 않습니다.");
+
+    if (authorization === "") {
+      next();
+      return;
+    }
 
     const [tokenType, token] = authorization.split(" ");
-    console.log(tokenType, token);
-    if (tokenType !== "Bearer") throw new Error();
+    if (tokenType !== "Bearer") return res.status(401).json({ message: "베어러 토큰이 아닙니다." });
 
-    const decodedToken = jwt.verify(token, process.env.AUTH_SECRET_KEY);
-    const userId = decodedToken.sign_up_id;
-
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY);
+    const sign_up_id = decodedToken.sign_up_id;
     const user = await userPrisma.user.findFirst({
       where: { sign_up_id },
     });
 
     if (!user) {
-      throw new Error("토큰 사용자가 존재하지 않습니다.");
+      //throw new Error("토큰 사용자가 존재하지 않습니다.");
+      next();
     }
 
     req.user = user;
+
     next();
   } catch (error) {
     switch (error.name) {

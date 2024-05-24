@@ -65,7 +65,6 @@ router.patch("/items/:itemId", async (req, res, next) => {
   try {
     const bodyjson = req.body;
     const itemId = Number(req.params.itemId);
-    console.log(itemId);
     const isExistItem = await gamePrisma.item.findFirst({
       where: {
         id: itemId,

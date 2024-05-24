@@ -71,8 +71,8 @@ router.post("/users/sign_in", async (req, res, next) => {
   } catch {}
 });
 
-function createAccessToken(id) {
-  const accessToken = jwt.sign({ id: id }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: "5m" });
+function createAccessToken(sign_up_id) {
+  const accessToken = jwt.sign({ sign_up_id }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: "1h" });
 
   return accessToken;
 }
