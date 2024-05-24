@@ -15,10 +15,25 @@ datasource db {
 }
 
 model User {
-  user_id   Int    @id @default(autoincrement()) @map("user_id")
-  sign_up_id        String @map("sign_up_id")
-  name      String @unique @map("name")
-  password  Int    @map("password")
+  user_id     Int    @id @default(autoincrement()) @map("user_id")
+  name        String @map("name")
+  sign_up_id  String @unique @map("sign_up_id")
+  password    String @map("password")
   
+  character   Character[]
+
   @@map("user")
+}
+
+model Character {
+  id        Int     @id @default(autoincrement()) @map("id")
+  name      String  @unique @map("name")
+  User_id   Int     @map("user_id")
+  health    Int     @map("health")
+  power     Int     @map("power")
+  money     Int     @map("money")
+
+  user      User    @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
+
+  @@map("character")
 }
