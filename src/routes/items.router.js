@@ -1,10 +1,10 @@
 import express from "express";
-import { prisma } from "../utils/prisma/index.js";
+import { gamePrisma } from "../utils/prisma/index.js";
 
 const router = express.Router();
 
 router.get("/items", async (req, res) => {
-  const datas = await prisma.item.findMany({
+  const datas = await gamePrisma.item.findMany({
     select: {
       id: true,
       name: true,
@@ -20,7 +20,7 @@ router.get("/items", async (req, res) => {
 
 router.get("/items/:itemId", async (req, res) => {
   const itemId = Number(req.params.itemId);
-  const isExistItem = await prisma.item.findFirst({
+  const isExistItem = await gamePrisma.item.findFirst({
     where: {
       id: itemId,
     },
@@ -36,7 +36,7 @@ router.get("/items/:itemId", async (req, res) => {
 router.post("/items", async (req, res, next) => {
   try {
     const { name, health, power, price } = req.body;
-    const isExistItem = await prisma.item.findFirst({
+    const isExistItem = await gamePrisma.item.findFirst({
       where: {
         name,
       },
@@ -46,7 +46,7 @@ router.post("/items", async (req, res, next) => {
       return res.status(409).json({ message: "이미 존재하는 아이템입니다." });
     }
 
-    const item = await prisma.item.create({
+    const item = await gamePrisma.item.create({
       data: {
         name,
         health,
@@ -66,14 +66,14 @@ router.patch("/items/:itemId", async (req, res, next) => {
     const bodyjson = req.body;
     const itemId = Number(req.params.itemId);
     console.log(itemId);
-    const isExistItem = await prisma.item.findFirst({
+    const isExistItem = await gamePrisma.item.findFirst({
       where: {
         id: itemId,
       },
     });
 
     if (isExistItem) {
-      await prisma.item.update({
+      await gamePrisma.item.update({
         data: {
           ...bodyjson,
         },
