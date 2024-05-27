@@ -13,7 +13,7 @@ router.get("/character/:character_id", authMiddleware, async (req, res, next) =>
 
   const isExistId = await userPrisma.character.findFirst({
     where: {
-      id: +character_id,
+      character_id: +character_id,
     },
   });
 
@@ -26,7 +26,7 @@ router.get("/character/:character_id", authMiddleware, async (req, res, next) =>
 
   const isExistUser = await userPrisma.character.findFirst({
     where: {
-      id: +character_id,
+      character_id: +character_id,
     },
     select: {
       name: true,
@@ -72,7 +72,7 @@ router.delete("/character/:id", authMiddleware, async (req, res, next) => {
 
   const isExistUser = await userPrisma.character.findFirst({
     where: {
-      id,
+      character_id,
       User_id: user_id,
     },
   });
@@ -80,11 +80,38 @@ router.delete("/character/:id", authMiddleware, async (req, res, next) => {
   if (!isExistUser) return res.status(409).json({ message: "없는 케릭터 입니다." });
   const character = await userPrisma.character.delete({
     where: {
-      id: id,
+      character_id: id,
     },
   });
 
   return res.status(200).json({ delete: character });
+});
+
+router.patch("/character/getmoney/:id", authMiddleware, async (req, res, next) => {
+  const id = Number(req.params.id);
+  const { user_id } = req.user;
+
+  if (user_id === undefined) {
+    return res.status(401).json({ message: "로그인을 하지 않았습니다." });
+  }
+
+  const isExistUser = await userPrisma.character.findFirst({
+    where: {
+      character_id: id,
+      User_id: user_id,
+    },
+  });
+
+  if (!isExistUser) return res.status(409).json({ message: "없는 케릭터 입니다." });
+
+  const character = await userPrisma.character.update({
+    where: {
+      character_id: id,
+    },
+    data: { money: (isExistUser.money += 100) },
+  });
+
+  return res.status(200).json({ money: character.money });
 });
 
 export default router;
