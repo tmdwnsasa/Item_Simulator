@@ -26,14 +26,36 @@ model User {
 }
 
 model Character {
-  id        Int     @id @default(autoincrement()) @map("id")
-  name      String  @unique @map("name")
-  User_id   Int     @map("user_id")
-  health    Int     @default(500) @map("health")
-  power     Int     @default(100) @map("power")
-  money     Int     @default(10000) @map("money")
+  character_id  Int     @id @default(autoincrement()) @map("character_id")
+  name          String  @unique @map("name")
+  User_id       Int     @map("user_id")
+  health        Int     @default(500) @map("health")
+  power         Int     @default(100) @map("power")
+  money         Int     @default(10000) @map("money")
+
+  inventory     Inventory[]
+  equipment     Equipment[]
 
   user      User    @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
-
+  
   @@map("character_db")
+}
+
+model Inventory {
+  item_id         Int   @id @map("item_id")
+  Character_id    Int   @map("character_id")
+  count           Int   @map("count")
+
+  character       Character    @relation(fields: [Character_id], references: [character_id], onDelete:Cascade)
+
+  @@map("inventory")
+}
+
+model Equipment {
+  item_id         Int   @id @map("item_id")
+  Character_id    Int   @map("character_id")
+
+  character      Character    @relation(fields: [Character_id], references: [character_id], onDelete:Cascade)
+
+  @@map("equipment")
 }
