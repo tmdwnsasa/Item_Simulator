@@ -42,7 +42,8 @@ model Character {
 }
 
 model Inventory {
-  item_id         Int   @id @map("item_id")
+  inven_id        Int   @id @default(autoincrement())  @map("inven_id")
+  item_id         Int   @map("item_id")
   Character_id    Int   @map("character_id")
   count           Int   @map("count")
 
@@ -52,7 +53,8 @@ model Inventory {
 }
 
 model Equipment {
-  item_id         Int   @id @map("item_id")
+  equip_id        Int   @id @default(autoincrement()) @map("equip_id")
+  item_id         Int   @map("item_id")
   Character_id    Int   @map("character_id")
 
   character      Character    @relation(fields: [Character_id], references: [character_id], onDelete:Cascade)
