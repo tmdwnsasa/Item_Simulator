@@ -171,7 +171,6 @@ router.patch("/inventorysell/:character_id", authMiddleware, async (req, res, ne
           id: item.item_id,
         },
       });
-      console.log(authorCharacter.character_id + " " + itemdetail.id);
       const inventory = await userPrisma.inventory.findFirst({
         where: {
           Character_id: authorCharacter.character_id,
