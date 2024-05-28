@@ -195,14 +195,12 @@ router.delete("/equipmentunequip/:Character_id", authMiddleware, async (req, res
           },
         });
 
-        result.push(
-          await tx.equipment.deleteMany({
-            where: {
-              Character_id: authorCharacter.character_id,
-              item_id: item.item_id,
-            },
-          }),
-        );
+        await tx.equipment.deleteMany({
+          where: {
+            Character_id: authorCharacter.character_id,
+            item_id: item.item_id,
+          },
+        });
 
         const inventory = await userPrisma.inventory.findFirst({
           where: {
@@ -210,6 +208,8 @@ router.delete("/equipmentunequip/:Character_id", authMiddleware, async (req, res
             item_id: item.item_id,
           },
         });
+
+        result.push(inventory);
 
         if (!inventory) {
           await tx.inventory.create({

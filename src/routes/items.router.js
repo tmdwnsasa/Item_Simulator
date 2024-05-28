@@ -1,5 +1,6 @@
 import express from "express";
 import { gamePrisma } from "../utils/prisma/index.js";
+import { userPrisma } from "../utils/prisma/index.js";
 
 const router = express.Router();
 
@@ -71,6 +72,9 @@ router.patch("/items/:itemId", async (req, res, next) => {
       },
     });
 
+    if (!isExistItem) return res.status(404).json({ message: "그런 아이템은 존재하지 않습니다." });
+    const powerChange = bodyjson.power - isExistItem.power;
+    const healthChange = bodyjson.health - isExistItem.health;
     if (isExistItem) {
       await gamePrisma.item.update({
         data: {
@@ -81,6 +85,31 @@ router.patch("/items/:itemId", async (req, res, next) => {
         },
       });
     }
+
+    const characArr = await userPrisma.equipment.findMany({
+      where: {
+        item_id: itemId,
+      },
+    });
+
+    for (let character of characArr) {
+      const characterdata = await userPrisma.character.findFirst({
+        where: {
+          character_id: character.character_id,
+        },
+      });
+
+      await userPrisma.character.updateMany({
+        where: {
+          character_id: character.character_id,
+        },
+        data: {
+          power: (characterdata.power += powerChange),
+          health: (characterdata.health += healthChange),
+        },
+      });
+    }
+
     return res.status(200).json({ bodyjson });
   } catch (err) {
     next(err);
