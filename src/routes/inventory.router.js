@@ -1,7 +1,6 @@
-import express from "express";
+import express, { text } from "express";
 import { userPrisma } from "../utils/prisma/index.js";
 import { gamePrisma } from "../utils/prisma/index.js";
-import jwt from "jsonwebtoken";
 import authMiddleware from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -32,19 +31,19 @@ router.get("/inventory/:Character_id", authMiddleware, async (req, res, next) =>
   return res.status(200).json({ inven });
 });
 
-router.patch("/inventorybuy/:Character_id_inv", authMiddleware, async (req, res, next) => {
-  const { character_id } = req.params;
+router.patch("/inventorybuy/:Character_id", authMiddleware, async (req, res, next) => {
+  const { Character_id } = req.params;
   const itemDatas = req.body;
 
   //무결성 검사
-  if (req.user === undefined) {
+  if (!req.user) {
     return res.status(401).json({ message: "사용자 인증이 필요합니다." });
   }
 
   const authorCharacter = await userPrisma.character.findFirst({
     where: {
       User_id: req.user.user_id,
-      character_id,
+      character_id: +Character_id,
     },
   });
 
@@ -71,63 +70,67 @@ router.patch("/inventorybuy/:Character_id_inv", authMiddleware, async (req, res,
   if (authorCharacter.money < sum) return res.status(400).json({ message: "돈이 부족합니다." });
 
   //데이터 입력
-  for (const item of itemDatas) {
-    const itemdetail = await gamePrisma.item.findFirst({
-      where: {
-        id: item.item_id,
-      },
-    });
-
-    const inventory = await userPrisma.inventory.findFirst({
-      where: {
-        item_id: itemdetail.id,
-      },
-    });
-
-    if (inventory === null) {
-      await userPrisma.inventory.create({
-        data: {
-          item_id: item.item_id,
-          count: item.count,
-          Character_id: authorCharacter.character_id,
-        },
-      });
-    } else {
-      await userPrisma.inventory.update({
+  await userPrisma.$transaction(async (tx) => {
+    for (const item of itemDatas) {
+      const itemdetail = await gamePrisma.item.findFirst({
         where: {
-          item_id: item.item_id,
-        },
-        data: {
-          count: (inventory.count += item.count),
+          id: item.item_id,
         },
       });
-    }
-  }
 
-  await userPrisma.character.update({
-    where: {
-      character_id: authorCharacter.character_id,
-    },
-    data: {
-      money: authorCharacter.money - sum,
-    },
+      const inventory = await userPrisma.inventory.findFirst({
+        where: {
+          Character_id: authorCharacter.character_id,
+          item_id: itemdetail.id,
+        },
+      });
+
+      if (inventory === null) {
+        await tx.inventory.create({
+          data: {
+            item_id: item.item_id,
+            count: item.count,
+            Character_id: authorCharacter.character_id,
+          },
+        });
+      } else {
+        await tx.inventory.updateMany({
+          where: {
+            Character_id: authorCharacter.character_id,
+            item_id: item.item_id,
+          },
+          data: {
+            count: (inventory.count += item.count),
+          },
+        });
+      }
+    }
+
+    await tx.character.update({
+      where: {
+        character_id: authorCharacter.character_id,
+      },
+      data: {
+        money: authorCharacter.money - sum,
+      },
+    });
   });
   return res.status(200).json({ money: authorCharacter.money });
 });
 
-router.patch("/inventorysell/:Character_id_inv", authMiddleware, async (req, res, next) => {
+router.patch("/inventorysell/:character_id", authMiddleware, async (req, res, next) => {
   const { character_id } = req.params;
   const itemDatas = req.body;
 
   //무결성 검사
-  if (req.user === undefined) {
+  if (!req.user) {
     return res.status(401).json({ message: "사용자 인증이 필요합니다." });
   }
 
   const authorCharacter = await userPrisma.character.findFirst({
     where: {
       User_id: req.user.user_id,
-      character_id,
+      character_id: +character_id,
     },
   });
 
@@ -145,6 +148,7 @@ router.patch("/inventorysell/:Character_id_inv", authMiddleware, async (req, res
 
     const inventory = await userPrisma.inventory.findFirst({
       where: {
+        Character_id: authorCharacter.id,
         item_id: itemdetail.id,
       },
     });
@@ -160,48 +164,51 @@ router.patch("/inventorysell/:Character_id_inv", authMiddleware, async (req, res
   }
 
   //데이터 입력
-  for (const item of itemDatas) {
-    const itemdetail = await gamePrisma.item.findFirst({
-      where: {
-        id: item.item_id,
-      },
-    });
-
-    const inventory = await userPrisma.inventory.findFirst({
-      where: {
-        Character_id: authorCharacter.character_id,
-        item_id: itemdetail.id,
-      },
-    });
-    console.log(inventory.count);
-    if (inventory !== null) {
-      await userPrisma.inventory.update({
+  await userPrisma.$transaction(async (tx) => {
+    for (const item of itemDatas) {
+      const itemdetail = await gamePrisma.item.findFirst({
         where: {
-          item_id: item.item_id,
-        },
-        data: {
-          count: (inventory.count -= item.count),
+          id: item.item_id,
         },
       });
-    }
-    console.log(inventory.count);
-
-    if (inventory.count === 0) {
-      await userPrisma.inventory.delete({
+      console.log(authorCharacter.character_id + " " + itemdetail.id);
+      const inventory = await userPrisma.inventory.findFirst({
         where: {
-          item_id: item.item_id,
+          Character_id: authorCharacter.character_id,
+          item_id: itemdetail.id,
         },
       });
-    }
-  }
 
-  await userPrisma.character.update({
-    where: {
-      character_id: authorCharacter.character_id,
-    },
-    data: {
-      money: authorCharacter.money + sum,
-    },
+      if (inventory !== null) {
+        await tx.inventory.updateMany({
+          where: {
+            Character_id: authorCharacter.character_id,
+            item_id: item.item_id,
+          },
+          data: {
+            count: (inventory.count -= item.count),
+          },
+        });
+      }
+
+      if (inventory.count === 0) {
+        await tx.inventory.deleteMany({
+          where: {
+            Character_id: authorCharacter.character_id,
+            item_id: item.item_id,
+          },
+        });
+      }
+    }
+
+    await tx.character.update({
+      where: {
+        character_id: authorCharacter.character_id,
+      },
+      data: {
+        money: authorCharacter.money + sum,
+      },
+    });
   });
   return res.status(200).json({ money: authorCharacter.money });
 });
