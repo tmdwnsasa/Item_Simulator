@@ -76,8 +76,8 @@ router.post("/equipmentequip/:Character_id", authMiddleware, async (req, res, ne
       },
     });
 
-    if (equipment) return res.status(400).json({ message: "이미 장착한 아이템입니다" });
-    if (!inventory) return res.status(400).json({ message: "인벤토리에 존재하지 않습니다" });
+    if (equipment) return res.status(409).json({ message: "이미 장착한 아이템입니다" });
+    if (!inventory) return res.status(404).json({ message: "인벤토리에 존재하지 않습니다" });
   }
 
   const result = [];
@@ -181,7 +181,7 @@ router.delete("/equipmentunequip/:Character_id", authMiddleware, async (req, res
       },
     });
 
-    if (!equipment) return res.status(400).json({ message: "장착하지 않은 아이템입니다" });
+    if (!equipment) return res.status(404).json({ message: "장착하지 않은 아이템입니다" });
   }
 
   const result = [];

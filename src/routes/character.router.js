@@ -77,7 +77,7 @@ router.delete("/character/:id", authMiddleware, async (req, res, next) => {
     },
   });
 
-  if (!isExistUser) return res.status(409).json({ message: "없는 케릭터 입니다." });
+  if (!isExistUser) return res.status(404).json({ message: "없는 케릭터 입니다." });
   const character = await userPrisma.character.delete({
     where: {
       character_id: id,
@@ -102,7 +102,7 @@ router.patch("/character/getmoney/:id", authMiddleware, async (req, res, next) =
     },
   });
 
-  if (!isExistUser) return res.status(409).json({ message: "없는 케릭터 입니다." });
+  if (!isExistUser) return res.status(404).json({ message: "없는 케릭터 입니다." });
 
   const character = await userPrisma.character.update({
     where: {
