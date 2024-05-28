@@ -5,7 +5,7 @@ export default async function (req, res, next) {
   try {
     const authorization = req.header("Authorization");
 
-    if (authorization === "") {
+    if (!authorization) {
       next();
       return;
     }
