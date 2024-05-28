@@ -4,16 +4,17 @@ import UsersRouter from "./routes/users.router.js";
 import ItemsRouter from "./routes/items.router.js";
 import CharacterRouter from "./routes/character.router.js";
 import InventoryRouter from "./routes/inventory.router.js";
+import EquipmentRouter from "./routes/equipment.router.js";
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-app.use("/api", [UsersRouter, ItemsRouter, CharacterRouter, InventoryRouter]);
+app.use("/api", [UsersRouter, ItemsRouter, CharacterRouter, InventoryRouter, EquipmentRouter]);
 
 app.use(errorHandlingMiddleware);
 
 app.listen(PORT, () => {
-  console.log(PORT, "포트로 서버가 열렸다~");
+  console.log(PORT, "포트로 서버가 열렸다.");
 });
